@@ -54,7 +54,7 @@ A high-performance network stress testing framework built in Go, featuring multi
 
 ```bash
 # Clone the repository
-git clone https://github.co/gatiella/orchardnet-api.git
+git clone https://github.com/gatiella/orchardnet-api.git
 cd orchardnet-api
 
 # Install dependencies
