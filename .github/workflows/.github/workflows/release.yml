@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Build for multiple platforms
+      run: |
+        # Linux AMD64
+        GOOS=linux GOARCH=amd64 go build -o orchardnet-api-linux-amd64 -ldflags="-s -w"
+        
+        # Linux ARM64
+        GOOS=linux GOARCH=arm64 go build -o orchardnet-api-linux-arm64 -ldflags="-s -w"
+        
+        # macOS AMD64
+        GOOS=darwin GOARCH=amd64 go build -o orchardnet-api-darwin-amd64 -ldflags="-s -w"
+        
+        # macOS ARM64 (Apple Silicon)
+        GOOS=darwin GOARCH=arm64 go build -o orchardnet-api-darwin-arm64 -ldflags="-s -w"
+        
+        # Windows AMD64
+        GOOS=windows GOARCH=amd64 go build -o orchardnet-api-windows-amd64.exe -ldflags="-s -w"
+
+    - name: Create checksums
+      run: |
+        sha256sum orchardnet-api-* > checksums.txt
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          orchardnet-api-linux-amd64
+          orchardnet-api-linux-arm64
+          orchardnet-api-darwin-amd64
+          orchardnet-api-darwin-arm64
+          orchardnet-api-windows-amd64.exe
+          checksums.txt
+        body: |
+          ## ⚠️ LEGAL DISCLAIMER
+          
+          **THIS SOFTWARE IS FOR EDUCATIONAL AND AUTHORIZED TESTING PURPOSES ONLY.**
+          
+          Unauthorized use is ILLEGAL and may result in criminal prosecution.
+          
+          ## 📦 Installation
+          
+          Download the appropriate binary for your platform:
+          
+          - **Linux (x86_64)**: `orchardnet-api-linux-amd64`
+          - **Linux (ARM64)**: `orchardnet-api-linux-arm64`
+          - **macOS (Intel)**: `orchardnet-api-darwin-amd64`
+          - **macOS (Apple Silicon)**: `orchardnet-api-darwin-arm64`
+          - **Windows**: `orchardnet-api-windows-amd64.exe`
+          
+          ## 🚀 Quick Start
+          
+          ```bash
+          # Make executable (Linux/macOS)
+          chmod +x orchardnet-api-*
+          
+          # Run with sudo (required for raw sockets)
+          sudo ./orchardnet-api-linux-amd64
+          ```
+          
+          ## 📋 Verify Checksums
+          
+          ```bash
+          sha256sum -c checksums.txt
+          ```
+          
+          ## 📖 Documentation
+          
+          See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for full documentation.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
